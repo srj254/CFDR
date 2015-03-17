@@ -4,6 +4,7 @@ import os
 from collections import *
 #from Levenshtein import *
 import hashlib
+import numpy
 
 class libListFileInfo:
 	liblistKey = ""
@@ -141,9 +142,18 @@ def groupJobs(dirName, keyword, writeToFile, whereToWrite):
                 	jobList = list(set([item.strip(' ') for item in line.strip().split(',') if item]))
 			jobGroup[groupNumber] = jobList
 			if int(writeToFile) is 1:
-				with open(whereToWrite + "/"+ str(groupNumber)+".txt", 'w') as f:
+				with open(whereToWrite + "/"+ str(groupNumber), 'w') as f:
 	                        	print >> f, str(groupNumber) + ';' +  ','.join(jobID for jobID in jobList)
 			groupNumber += 1
+	alist = []
+	for key in jobGroup.keys():
+		alist.append(len(jobGroup.get(key)))
+	print "SD ", numpy.std(alist)
+	print "Mean", numpy.mean(alist)
+	print "Median", numpy.median(alist)
+	print "Mode", numpy.argmax((numpy.bincount(alist)))
+	print "Groups ", len(jobGroup.keys())
+	raw_input()
 	return jobGroup	
 
 
