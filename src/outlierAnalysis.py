@@ -27,15 +27,14 @@ def outlierAnalysis(filepath):
 	outlierDict = {}
 	normalDict  = {}
 
-	for i in range(0,531):
+	for i in range(0,4000):
 		flag = True
-		flag = flag and os.path.isfile(filepath+str(i)+'w')
-		flag = flag and os.path.isfile(filepath+str(i)+'c')
-		flag = flag and os.path.isfile(filepath+str(i)+'v')
-		flag = flag and os.path.isfile(filepath+str(i)+'m')
+		flag = flag and os.path.isfile(filepath+'/'+str(i)+'w')
+		flag = flag and os.path.isfile(filepath+'/'+str(i)+'c')
+		flag = flag and os.path.isfile(filepath+'/'+str(i)+'v')
+		flag = flag and os.path.isfile(filepath+'/'+str(i)+'m')
 		if flag == True :
 			maxOutlrGrp.append(i)
-	
 	for groupNum in maxOutlrGrp:
 		listw = []
 		listc = []
@@ -88,24 +87,27 @@ if __name__ == "__main__":
 	if len(sys.argv) < 3:
 		print "Usage ./outlierAnalysis.py <path to outliers> <path to processed liblist>"
 		exit() 
-	outlierJobs, normalJobsWithAttr = outlierAnalysis(sys.argv[1])
+	outlierJobs, normalJobsWithAttr = outlierAnalysis(sys.argv[1]+'/')
 	for grpNum in outlierJobs.keys():
-		print ",".join(job for job in outlierJobs.get(grpNum))
-
+		pass
+		#print ",".join(job for job in outlierJobs.get(grpNum))
+	i = 1
+	print "JobType\tGroupNum\tJobID\tFilePath"
 	for grpNum in outlierJobs.keys():
-		print "*******************************************************************"
+		
+		i += 1
 		temp = 0;
 		for root, dirs, filenames in os.walk(sys.argv[2]):
 			for f in filenames: 
 				if any(job in f for job in outlierJobs.get(grpNum)) and f.endswith('.liblist'):
-					print "O  > ", grpNum, " \tFilePath: ",os.path.join(root, f)
+					print "O\t", grpNum, "\t", f.split('.')[0].split('_')[1], "\t", os.path.join(root, f)
 				else:
 					if any((jobWithAttr.jobID in f and jobWithAttr.dimension is 'w') for jobWithAttr in normalJobsWithAttr.get(grpNum)) and f.endswith('.liblist'):
-						print "Nw > ", grpNum, " \tFilePath: ",os.path.join(root, f)
+						print "Nw\t", grpNum, "\t", f.split('.')[0].split('_')[1], "\t", os.path.join(root, f)
 					if any((jobWithAttr.jobID in f and jobWithAttr.dimension is 'v') for jobWithAttr in normalJobsWithAttr.get(grpNum)) and f.endswith('.liblist'):
-						print "Nv > ", grpNum, " \tFilePath: ",os.path.join(root, f)
+						print "Nv\t", grpNum, "\t", f.split('.')[0].split('_')[1], "\t", os.path.join(root, f)
 					if any((jobWithAttr.jobID in f and jobWithAttr.dimension is 'm') for jobWithAttr in normalJobsWithAttr.get(grpNum)) and f.endswith('.liblist'):
-						print "Nm > ", grpNum, " \tFilePath: ",os.path.join(root, f)
+						print "Nm\t", grpNum, "\t", f.split('.')[0].split('_')[1], "\t", os.path.join(root, f)
 					if any((jobWithAttr.jobID in f and jobWithAttr.dimension is 'c') for jobWithAttr in normalJobsWithAttr.get(grpNum)) and f.endswith('.liblist'):
-						print "Nc > ", grpNum, " \tFilePath: ",os.path.join(root, f)
+						print "Nc\t", grpNum, "\t", f.split('.')[0].split('_')[1], "\t", os.path.join(root, f)
 

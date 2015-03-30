@@ -6,6 +6,10 @@ import sys
 import time
 import string 
 
+if len(sys.argv) < 2:
+	print "Usage ./<Executable file Name> <Path to Tacc stats files>"
+	exit()
+
 taccStatsFileName = sys.argv[1]
 schemaTypes = [];
 timestamp = 0;
@@ -55,10 +59,6 @@ def statsParser(filePath, line):
     
 ## Program starts Here ##
         
-if len(sys.argv) < 2:
-	print "Usage ./<Executable file Name> <Path to Tacc stats files>"
-	exit()
-
 root, subDirs, fileNames = next(os.walk(taccStatsFileName))
 
 for subDir in subDirs:

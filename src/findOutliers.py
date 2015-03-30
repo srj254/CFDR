@@ -45,11 +45,6 @@ for key in jobGroups.keys():
 		raw_input()
 statistics = accDataParser.getAccData(sys.argv[1])
 
-#print len(jobGroups.keys())
-#for jobGroupNumber in jobGroups.keys():
-#	print type(jobGroups.get(jobGroupNumber))
-#	print str(jobGroupNumber) + '-> ' + ' '.join(jobID for jobID in jobGroups.get(jobGroupNumber))
-
 for record in statistics:
 	jobStats[record.get('JobID')] = record
 

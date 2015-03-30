@@ -3,9 +3,21 @@
 import os
 import sys
 import re
+from collections import defaultdict
 
-fields = []
+fields 	= []
 keysArr = []
+
+def jobConcentrationOnExecHost(execHostStr):
+	hostCount = defaultdict(int)
+	hostList  = execHostStr.split('+')
+	tempList  = []
+	for host in hostList:
+		tempList.append(host.split('/')[0])
+	for item in tempList:
+		hostCount[item] += 1
+	val = (float(len(hostList))/float(len(hostCount.keys())))
+	return int(val*100), len(hostCount.keys()), len(hostList)
 
 def parseLine(line):
 	VAR_DEBUG_EN = 0; 
@@ -26,8 +38,8 @@ def parseLine(line):
 		myString = keyVal
 		if 2 == keyVal.count('='):
 			pairs = myString.split(':')
-			pairs[0] =  pairs[0].strip('\n')+'('+ pairs[-1].split('=')[-1]+ ')'
-			myString = pairs[0]		
+			pairs[0] = pairs[0].strip('\n')+","+pairs[-1].split('=')[-1]
+			myString = pairs[0]
 		pair = myString.split('=')
 		keyValDict[pair[0].strip('\n')] = pair[1].strip('\n')
 		if VAR_DEBUG_EN == 1: 
@@ -36,8 +48,16 @@ def parseLine(line):
 			print '*************************************'
 			print pair
 			VAR_DEBUG_EN = 0
+	
+	jobDensity, uniqHosts, totalCores = jobConcentrationOnExecHost\
+					(keyValDict.get('exec_host'))
+	keyValDict['jobDensity'] = str(jobDensity)
+	keyValDict['uniqHosts']  = str(uniqHosts)
+	keyValDict['totalCores'] = str(totalCores)
+	= checkThrashing(keyValDict.get('exec_host'))
+	keyValDict['IsThrashing']
 	fields.append(keyValDict)
-		
+	
 def getAccData(filePath):
 	for root, dirNames, fileNames in os.walk(filePath):
 		for fileName in fileNames:
@@ -48,7 +68,9 @@ def getAccData(filePath):
 
 if __name__ == "__main__":
 	if len(sys.argv) < 3:
-        	print "Usage: ./parseAccouting.py <Path to Accounting files> <file to Write> <Arguments>", "\n", "(Provide the exact keywords or attribute names in <Arguments> to generate statistics for only that column in the statistics file)"
+        	print "Usage: ./parseAccouting.py <Path to Accounting files> <file to Write> <Arguments(Optional. Keep it empty if not sure)>", "\n",\
+		      	"(Provide the exact keywords or attribute names in <Arguments> to",\
+			"generate statistics for only that column in the statistics file)"
 	        exit()
 
 	getAccData(sys.argv[1])
@@ -81,14 +103,10 @@ if __name__ == "__main__":
 		valuesArr = []
 		for key in columnKeys:
 			value = field.get(key) 
-			if value == '1840222':
-				print 'Got it'
 			if value is None:
 				valuesArr.append('-NA-')
 			else:
 				valuesArr.append(value)
-#		if na_Values > 10:
-#			print field.get('JobID'), na_Values
 		print >> statisticsFile, '\t'.join(valuesArr)
-	print list((na_Values))
-	statisticsFile.close()	
+	statisticsFile.close()
+

@@ -21,18 +21,13 @@ for root, subdirs, filenames in os.walk(sys.argv[1]):
 			jobID = filename.split('_')[1].split('.')[0]
 			username = filename.split('_')[0]
 			jobID2User[jobID] = username;
-#			print username
-#			raw_input()
-
 			try: 
 				jobIDFiles[jobID].append(os.path.join(root, filename))
 			except KeyError:
 				jobIDFiles[jobID] = [os.path.join(root, filename)]
+print "Total number of Jobs: ", len(jobIDFiles.keys())
 
 for key in jobIDFiles.keys():
-	#print key + ' ' + ','.join(fPath for fPath in jobIDFiles.get(key))
-	#print key + ' ' + str(len(jobIDFiles.get(key)))
-	#raw_input()
 	name = os.path.basename(jobIDFiles.get(key)[0])
 	with open(sys.argv[3] +'/' +name , 'w') as outFile:
 		libList = []
@@ -41,19 +36,20 @@ for key in jobIDFiles.keys():
 				for line in infile:
 					libList.append(line.strip()) 
 		libList = sorted(list(set(libList)))
+		writeIntoFile = []		
 		for lib in libList:
-			if ('so' not in lib) or (2 >= len(lib)):
-#				print "passing"+ lib +"passed"
+			if ('.so' not in lib) or (2 >= len(lib)):
 				continue
-			print >> outFile, lib
+			lib = lib.strip()
+#			print >> outFile, lib
 			try: 
 				libname = (lib.rsplit('/', 1)[1]).split('.so')[0]+ '.so'
 			except:
-				print "libname"+str(len(lib))+"is this"+ str('so' not in lib)
+				print "libname: ", lib
+				print "Enter the libname: "
 				libname = raw_input()
+			writeIntoFile.append(lib)	
 			libname = libname.lower()
-#			print lib, libname
-#			raw_input()
 			try:
 				libnameTable[libname] = libnameTable.get(libname) + 1;
 			except:
@@ -62,6 +58,7 @@ for key in jobIDFiles.keys():
 				libs2Users[libname].append(jobID2User.get(key))
 			except:
 				libs2Users[libname] = [username]
+		print >> outFile, '\n'.join(lib for lib in writeIntoFile)
 
 with open(sys.argv[3]+"/libraryTable", 'w') as f:
 	for key in libnameTable.keys():
@@ -77,7 +74,4 @@ mylist = []
 for key in jobID2User.keys():
 	mylist.append(jobID2User.get(key))
 
-print "Unique Users: ", len(list(set(mylist))), "JobIDs: ",len(jobID2User.keys())
-#print list(set(mylist))
-
-#print len(list(set(jobIDs)))
+print "Unique Users: ", len(list(set(mylist))), "\nJobIDs: ",len(jobID2User.keys())

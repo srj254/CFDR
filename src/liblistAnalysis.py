@@ -22,7 +22,6 @@ def doClustering(mylist, threshold):
         for i in numb:
                 for j in range(i+1, len(numb)):
 			if distance(mylist[i].liblistKey,mylist[j].liblistKey) <= threshold:
-						#print mylist[j].liblistKey
 						clusters[i].append(mylist[j].liblistKey)
 						clusters[j].append(mylist[i].liblistKey)
 	return clusters
@@ -39,7 +38,6 @@ def getLibKey(fileName):
 	 #sort the library list to normalize. this is to take care of address space randomization
     	 lines.sort()
 	 libkey = ','.join(lines)
-	 #print libkey
 	 hash_object = hashlib.md5(libkey.encode())
 	 hashkey = hash_object.hexdigest()
 	 hashkeyStr = str(hashkey)
@@ -58,13 +56,11 @@ def getAllLibraryNames(fileName):
  
 def makeLibListKey(fileName):
 	baseFileName = os.path.basename(fileName)
-	#print baseFileName
 	try:
 		user_jobid = baseFileName.split('.')[0]
 		fields = user_jobid.split('_')
 		userName = fields[0]
 		jobid = int(fields[1])
-        	#print userName, jobid
 		libraryKey = getLibKey(fileName)
 		libinfo = libListFileInfo(libraryKey, userName, jobid)
 		return libraryKey, libinfo
@@ -74,25 +70,18 @@ def makeLibListKey(fileName):
 def getAllFiles(dirName, keyword):
 	libraryList = []
 	libraryNames= []
-	unusedFiles = open(keyword +'UnusedFiles.list', 'w')
 	for root, dirnames, filenames in os.walk(dirName):
 		for filename in filenames:
 			f = (os.path.join(root, filename))
-#			print f
-#			raw_input()
 			baseFileName = os.path.basename(f)
 			if(baseFileName.find("liblist") == -1):
 				continue
-#			if keyword not in baseFileName:
-#                                print >> unusedFiles, filename
-#                                x = raw_input()
 			libraryKey, libinfo = makeLibListKey(f)
 			if(libraryKey == ""):
 				continue
 			libraryList.append(libinfo)
 
 			libraryNames.extend(getAllLibraryNames(os.path.join(root, filename)))
-	unusedFiles.close()
 	libraryNames = sorted(list(set(libraryNames)))
 	return libraryList, libraryNames
 
@@ -112,7 +101,6 @@ def groupJobs(dirName, keyword, writeToFile, whereToWrite):
 	dName = dirName
 	libList, libraryNames = getAllFiles(dName, keyword)
 	jMap = identify_similar_jobs(libList)
-#	print "\n Identifying same jobids\n"
 	with open("grouped_jobs.txt", 'w') as outfile:
 		outfile.write("========= same jobs ==========\n")
 		for k in jMap.keys():
@@ -128,8 +116,9 @@ def groupJobs(dirName, keyword, writeToFile, whereToWrite):
 		lines = tempFile.readlines()
 	os.remove('grouped_jobs.txt')
 
-	with open(whereToWrite + "/"+ "allLibraryNames.txt", 'w') as f:
-		print >> f, "\n".join(libName for libName in libraryNames)
+	if int(writeToFile) is 1:
+		with open(whereToWrite + "/allLibraryNames", 'w') as f:
+			print >> f, "\n".join(libName for libName in libraryNames)
 
 	jobGroup = {}
 	groupNumber = 1
@@ -142,18 +131,18 @@ def groupJobs(dirName, keyword, writeToFile, whereToWrite):
                 	jobList = list(set([item.strip(' ') for item in line.strip().split(',') if item]))
 			jobGroup[groupNumber] = jobList
 			if int(writeToFile) is 1:
-				with open(whereToWrite + "/"+ str(groupNumber), 'w') as f:
+				with open(whereToWrite + "/G"+ str(groupNumber), 'w') as f:
 	                        	print >> f, str(groupNumber) + ';' +  ','.join(jobID for jobID in jobList)
 			groupNumber += 1
 	alist = []
 	for key in jobGroup.keys():
 		alist.append(len(jobGroup.get(key)))
-	print "SD ", numpy.std(alist)
-	print "Mean", numpy.mean(alist)
-	print "Median", numpy.median(alist)
-	print "Mode", numpy.argmax((numpy.bincount(alist)))
-	print "Groups ", len(jobGroup.keys())
-	raw_input()
+#	print "SD ", numpy.std(alist)
+#	print "Mean", numpy.mean(alist)
+#	print "Median", numpy.median(alist)
+#	print "Mode", numpy.argmax((numpy.bincount(alist)))
+#	print "Groups ", len(jobGroup.keys())
+#	raw_input()
 	return jobGroup	
 
 
