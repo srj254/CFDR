@@ -3,10 +3,18 @@
 import os
 import sys
 import re
+import pandas as pd
+import scipy  as sp
+import numpy  as np
+import taccStatsExtract as taccExtract 
 from collections import defaultdict
 
 fields 	= []
 keysArr = []
+count   = 0
+pgFltArray = []
+global taccDB
+taccDB 	= None
 
 def jobConcentrationOnExecHost(execHostStr):
 	hostCount = defaultdict(int)
@@ -19,7 +27,32 @@ def jobConcentrationOnExecHost(execHostStr):
 	val = (float(len(hostList))/float(len(hostCount.keys())))
 	return int(val*100), len(hostCount.keys()), len(hostList)
 
+def findPageFaults(execHostStr, jobStart, jobEnd):
+	global pgFltArray
+	hostList  = []
+	for host in execHostStr.split('+'):
+		hostList.append(host.split('/')[0])
+	hostList  = list(set(hostList))
+	minPgFlt = 0
+	maxPgFlt = 0
+	flag = False
+	for host in hostList:
+		nodeNumber = int((host.split('-')[1])[1:])
+		pagefaultsPer10Mins = taccExtract.extractTaccStats(taccDB, nodeNumber, 'vm', 'pgmajfault,E', int(jobStart), int(jobEnd))
+#		print host, nodeNumber, jobStart, int(jobStart), jobEnd, int(jobEnd)
+#		print pagefaultsPer10Mins
+#		print np.diff(pagefaultsPer10Mins)
+#		print np.amax(list(np.diff(pagefaultsPer10Mins)))
+		if len(pagefaultsPer10Mins) < 2:
+			maxPgFlt = 0
+			flag = True
+		elif maxPgFlt < np.amax(list(np.diff(pagefaultsPer10Mins))):
+			maxPgFlt = np.amax(list(np.diff(pagefaultsPer10Mins)))
+			pgFltArray.append(maxPgFlt)
+	return maxPgFlt, flag
+		
 def parseLine(line):
+	global count
 	VAR_DEBUG_EN = 0; 
 	# can be changed to raw_input() so that debug prints can be controlled
 	# print "Enter 1 to print the parsed string"
@@ -54,6 +87,11 @@ def parseLine(line):
 	keyValDict['jobDensity'] = str(jobDensity)
 	keyValDict['uniqHosts']  = str(uniqHosts)
 	keyValDict['totalCores'] = str(totalCores)
+	maxPgFlt, flag = findPageFaults(keyValDict.get('exec_host'), keyValDict.get('start'), keyValDict.get('end'))
+#	print "Max Page Fault", maxPgFlt
+#	raw_input()
+	count += int(flag)
+	keyValDict['maxMajPgFlt']= str(int(maxPgFlt))
 	fields.append(keyValDict)
 	
 def getAccData(filePath):
@@ -65,13 +103,20 @@ def getAccData(filePath):
 	return fields
 
 if __name__ == "__main__":
-	if len(sys.argv) < 3:
-        	print "Usage: ./parseAccouting.py <Path to Accounting files> <file to Write> <Arguments(Optional. Keep it empty if not sure)>", "\n",\
+	if len(sys.argv) < 4:
+        	print "Usage: ./parseAccouting.py <Path to Accounting files> <file to Write> <taccStatsPath> <Arguments(Optional. Keep it empty if not sure)>", "\n",\
 		      	"(Provide the exact keywords or attribute names in <Arguments> to",\
 			"generate statistics for only that column in the statistics file)"
 	        exit()
+	
+	taccStatsPath = sys.argv[3]
+	taccDB = taccExtract.createTaccDB(taccStatsPath)
 
 	getAccData(sys.argv[1])
+	print "Count Zeros", count
+	print "Max" , np.amax(pgFltArray)
+	print "Min" , np.amin(pgFltArray)
+	print "Mean", np.mean(pgFltArray)
 
 	for field in fields:
 		for key in field.keys():
@@ -81,7 +126,7 @@ if __name__ == "__main__":
 
 	argc = len(sys.argv)
 	columnKeys = []
-	if argc > 3:
+	if argc > 4:
 		columnKeys.append('JobID')
 		for key in sys.argv[3:]:
 			if key not in keysArr:

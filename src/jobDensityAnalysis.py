@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import time
 import parseAccounting as accDataParser
 import liblistAnalysis as libListAnalyser
 import matplotlib.pyplot as plt
@@ -26,11 +27,13 @@ def getJobStats(jobs):
 			wtime[job] 	= cnvtTime(jobStats.get(job).get('resources_used.walltime'))
 		except:
 			wtime[job] 	= cnvtTime('00:00:00')
+			print "Enter a Key"
 			raw_input()
 		try:
 			cputime[job] 	= cnvtTime(jobStats.get(job).get('resources_used.cput'))
 		except:
 			cputime[job] 	= cnvtTime('00:00:00')
+			print "Enter a Key again"
 			raw_input()
 	return wtime, cputime
 			
@@ -40,16 +43,23 @@ statistics = []
 #Important Parameters to be set before running the file
 VAR_DEBUG_EN		= 0;
 
-if len(sys.argv) < 4:
-	print "Usage " + "./<Script Name>.py <AccoutingData> <LibListPath> <PathToWrite>"
+if len(sys.argv) < 5:
+	print "Usage " + "./<Script Name>.py <AccoutingData> <LibListPath> <PathToWrite> <jDensity>"
 	exit()
 
+print sys.argv[3]+"/DenseAndSparseJobs"+str(int(sys.argv[4]))+".tsv"
+
+temp = int(sys.argv[4])
+print "Jobs are being grouped", time.time()
 jobGroups  = libListAnalyser.groupJobs(sys.argv[2], 'conte', 0, sys.argv[3])
 for key in jobGroups.keys():
 	if len(jobGroups.get(key)) != len(list(set(jobGroups.get(key)))):
 		print "Not equal ", key
 		raw_input()
+
+print "Jobs are Grouped", time.time()
 statistics = accDataParser.getAccData(sys.argv[1])
+print "Account stats are parsed", time.time()
 
 for record in statistics:
 	jobStats[record.get('JobID')] = record
@@ -85,7 +95,7 @@ for grpNum in jobGroups.keys():
 		except AttributeError:
 			continue
 
-		if jobDensity > 100:
+		if jobDensity > (int(sys.argv[4])):
 			denseJobs[totalCores].append(jobID)			
 		else:
 			sparseJobs[totalCores].append(jobID)	
@@ -93,19 +103,29 @@ for grpNum in jobGroups.keys():
 	denseJobGrp[grpNum] 	= denseJobs
 	sparseJobGrp[grpNum]  	= sparseJobs
 	
-f = open(sys.argv[3]+"/DenseAndSparseJobs.tsv", 'w')
-print >> f, "GroupNum\tNumcore\tSize\tWtimeAvg\tWtimeMed\tWtimeSdev\tCPUtimeAvg\tCPUtimeMed\tCPUtimeSdev\tIsDense"
+f = open(sys.argv[3]+"/DenseAndSparseJobs"+str(int(sys.argv[4]))+".tsv", 'w')
+print >> f, "GroupNum\tNumcore\tSize\tWtimeMed\tWtimeMean\tWtimeSdev\tWtMax\tWtMin\tCPUtimeMed\tCPUtimeMean\tCPUtimeSdev\tCPUtMAx\tCPUtMin\tIsDense"
 for grpNum in denseJobGrp.keys():
 	denseJobs =  denseJobGrp.get(grpNum)
 	for totalCores in denseJobs.keys():
 		jobs = denseJobs.get(totalCores)
 		jobs = sorted(jobs)
 		walltimes, cputimes = getJobStats(jobs)
-		print >> f, "%8d\t%8d\t%5d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%5d"\
-			%(grpNum, totalCores, len(jobs), \
-			np.median(walltimes.values()), np.mean(walltimes.values()), \
-			np.std(walltimes.values()), np.median(cputimes.values()), \
-			np.mean(cputimes.values()) , np.std(cputimes.values()), True)
+		print >> f, "%8d\t%8d\t%5d\t%8f\t%8f\t%8f\t%8f\t%8f\t%8f\t%8f\t%8f\t%8f\t%8f\t%5d"\
+			%(grpNum,\
+			totalCores,\
+			len(jobs), \
+			np.median(walltimes.values()), \
+			np.mean(walltimes.values()), \
+			np.std(walltimes.values()), \
+			np.amax(walltimes.values()), \
+			np.amin(walltimes.values()), \
+			np.median(cputimes.values()), \
+			np.mean(cputimes.values()), \
+			np.std(cputimes.values()), \
+			np.amax(cputimes.values()), \
+			np.amin(cputimes.values()), \
+			True)
 
 for grpNum in sparseJobGrp.keys():
 	sparseJobs =  sparseJobGrp.get(grpNum)
@@ -113,11 +133,21 @@ for grpNum in sparseJobGrp.keys():
 		jobs = sparseJobs.get(totalCores)
 		jobs = sorted(jobs)
 		walltimes, cputimes = getJobStats(jobs)
-		print >> f, "%8d\t%8d\t%5d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%5d"\
-			%(grpNum, totalCores, len(jobs), \
-			np.median(walltimes.values()), np.mean(walltimes.values()), \
-			np.std(walltimes.values()), np.median(cputimes.values()), \
-			np.mean(cputimes.values()) , np.std(cputimes.values()), False)
+		print >> f, "%8d\t%8d\t%5d\t%8f\t%8f\t%8f\t%8f\t%8f\t%8f\t%8f\t%8f\t%8f\t%8f\t%5d"\
+			%(grpNum,\
+			totalCores,\
+			len(jobs), \
+			np.median(walltimes.values()), \
+			np.mean(walltimes.values()), \
+			np.std(walltimes.values()), \
+			np.amax(walltimes.values()), \
+			np.amin(walltimes.values()), \
+			np.median(cputimes.values()), \
+			np.mean(cputimes.values()), \
+			np.std(cputimes.values()), \
+			np.amax(cputimes.values()), \
+			np.amin(cputimes.values()), \
+			False)
 
 f.close()
 
