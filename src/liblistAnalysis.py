@@ -144,6 +144,17 @@ def groupJobs(dirName, keyword, writeToFile, whereToWrite):
 #	print "Mode", numpy.argmax((numpy.bincount(alist)))
 #	print "Groups ", len(jobGroup.keys())
 #	raw_input()
+	if int(writeToFile) is 1:
+		job2Grp = {}
+		for key in jobGroup.keys():
+			jobList = jobGroup.get(key)
+			for job in jobList:
+				job2Grp[job] = key
+		print len(job2Grp.keys())
+		with open(whereToWrite + "/liblistTable.tsv", 'w') as writeFile:
+			for job in job2Grp.keys():
+				print >> writeFile, job, '\t', job2Grp.get(job)
+
 	return jobGroup	
 
 

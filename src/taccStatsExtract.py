@@ -36,11 +36,13 @@ attrDictionary = {
 
 'ib_ext'	: ['Timestamp', 'Identifier', 'port_select,C', 'counter_select,C', 'port_xmit_data,E,U=4B', 'port_rcv_data,E,U=4B', 'port_xmit_pkts,E', 'port_rcv_pkts,E', 'port_unicast_xmit_pkts,E', 'port_unicast_rcv_pkts,E', 'port_multicast_xmit_pkts,E', 'port_multicast_rcv_pkts,E'],
 
-'tmpfs'		: ['Timestamp', 'Identifier', 'bytes_used,U=B', 'files_used']
+'tmpfs'		: ['Timestamp', 'Identifier', 'bytes_used,U=B', 'files_used'],
+
+'mem'		: ['Timestamp', 'Identifier','MemTotal,U=KB','MemFree,U=KB','MemUsed,U=KB','Active,U=KB','Inactive,U=KB','Dirty,U=KB','Writeback,U=KB','FilePages,U=KB','Mapped,U=KB','AnonPages,U=KB','PageTables,U=KB','NFS_Unstable,U=KB','Bounce,U=KB','Slab,U=KB','HugePages_Total','HugePages_Free']
 
 }
 
-requirement = ['vm'] # 'llite', 'block', 'osc', 'lnet']
+requirement 	= ['vm', 'llite', 'block', 'ib_ext', 'mem']
 
 def createNodeDictionary(nodePath):
 	nodeDict = {}
@@ -58,7 +60,6 @@ def createNodeDictionary(nodePath):
 			try:
 				df = pd.io.parsers.read_csv(filepath, sep='\t', names=attrDictionary.get(filename.split('.')[0]), header=None)
 				df = pd.DataFrame.sort(df, columns='Timestamp')
-#				print pd.DataFrame.to_string(df)
 			except pd._parser.CParserError:
 				df = None
 			key = filename.split('.')[0]
@@ -73,21 +74,45 @@ def createTaccDB(nodesPath):
 			i +=1
 			nodeNumber = int((dirname.split('.')[0].split('-')[1])[1:])
 			nodesDict[nodeNumber] = createNodeDictionary(os.path.join(dirpath, dirname))
+			if (i%100 == 0):
+				print "100 Nodes done!"
 	return nodesDict
 
 def extractTaccStats(taccDB, node, key, feature, start, end):
 	nodeDict = taccDB.get(node)
-#	nodeDict = taccDB.get(taccDB.keys()[0])
-	df 	 = nodeDict.get(key)
+	try:
+		df 	 = nodeDict.get(key)
+	except KeyError:
+		print "Key %s not found for node %d" %(key, node)
+		return []
+		
 	roi_df   = df[(df['Timestamp'] >= start) & (df['Timestamp'] <= end)]
+	
+	if key == 'mem':
+		roi_df1 = roi_df[roi_df['Identifier'] == 1]
+		roi_df0 = roi_df[roi_df['Identifier'] == 0]
+		column  = [sum(x) for x in zip(roi_df0[feature].values.tolist(), roi_df1[feature].values.tolist())]
+		return column
+	
+	if key == 'ib_ext':
+		roi_df = roi_df[roi_df['Identifier'] == 'mlx5_0/1']
+
 	column   = roi_df[feature]
+
 	return column.tolist()
 	
 if __name__ == "__main__":
-	if len(sys.argv) != 7:
-		print "Usage: ./<ScriptName> <TaccStatsFilePath> <NodeNumber> <keyAttr> <feature> <start_time> <end_time>"
-		exit()
+#	if len(sys.argv) != 7:
+#		print "Usage: ./<ScriptName> <TaccStatsFilePath> <NodeNumber> <keyAttr> <feature> <start_time> <end_time>"
+#		exit()
 	taccDB 	  = createTaccDB(sys.argv[1])
-	dfExtract = extractTaccStats(taccDB, int(sys.argv[2]), sys.argv[3], sys.argv[4], int(sys.argv[5]), int(sys.argv[6]))
-#	mylist =  (dfExtract['rd_merges,E'])
-#	print mylist.tolist()
+	print "TACC DB Done!"
+
+	dfExtract = extractTaccStats(taccDB, 111, 'mem', 'MemUsed,U=KB', 1415422801, 1415427001)
+	print dfExtract
+	dfExtract = extractTaccStats(taccDB, 000, 'mem', 'MemUsed,U=KB', 1415422801, 1415427001)
+	print dfExtract
+	dfExtract = extractTaccStats(taccDB, 111, 'ib_ext', 'port_xmit_data,E,U=4B', 1415422801, 1415427001)
+	print dfExtract
+	
+#	dfExtract = extractTaccStats(taccDB, int(sys.argv[2]), sys.argv[3], sys.argv[4], int(sys.argv[5]), int(sys.argv[6]))
