@@ -55,6 +55,9 @@ def extractUserInfo(df, fakeUname):
 	# First Plot
 	userTable 	= df[df['user'] == fakename]
 	majPgFltTable 	= userTable[userTable['Thrashing'] == True]
+
+	majPgFltTable.to_csv(sys.argv[2]+"/"+fakeUname+".png", sep='\t')
+	
 	majPgFltTable	= pd.DataFrame.sort(majPgFltTable, columns="start")
 	majPgFltTable['date'] = ['']*len(majPgFltTable['start'].values.tolist())
 
@@ -168,7 +171,7 @@ if __name__ == "__main__":
 				"One fake username", sys.argv[4]
 			exit()
 
-		fakename = (fakename.values.tolist())[0]
+		fakename = (fakename['user'].values.tolist())[0]
 		print fakename
 	else:
 		fakename = sys.argv[4]

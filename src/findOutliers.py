@@ -20,12 +20,12 @@ jobStats   = {}
 statistics = []
 #Important Parameters to be set before running the file
 VAR_MINSIZE_OF_GRP 	= 10;
-SCORE_AT_PRCNTLE	= 95;
+SCORE_AT_PRCNTLE	= 90;
 VAR_DEBUG_EN		= 0;
 
 print "Make sure you don't have stale Outlier files in the provided destination path <Path to write Outlier Jobs>"
 if len(sys.argv) < 10:
-	print "Usage " + "./findOutliers.py <AccoutingData> <LibListPath> <conte | hansen> <writeToFile (0 | 1)> <whereToWriteJobGroups> <Path to write Outlier Jobs> <Minimum size of the Group> <Outlier Percentile score (0 to 100)> <Value2Use (w,c,m,v)>"
+	print "Usage "+"./findOutliers.py <AccoutingData> <LibListPath> <conte | hansen> <writeToFile (0 | 1)> <whereToWriteJobGroups> <Path to write Outlier Jobs> <Minimum size of the Group> <Outlier Percentile score (0 to 100)> <Value2Use (w,c,m,v)>"
 	exit()
 
 VAR_MINSIZE_OF_GRP	= int(sys.argv[7])
@@ -131,7 +131,7 @@ for jobGroupNumber in jobGroups.keys():
 		myval = 0
 		threshold = float(stats.scoreatpercentile(array2use, SCORE_AT_PRCNTLE))
 		medianVal = float(stats.scoreatpercentile(array2use, 50))
-		difference = threshold - float((float(1.5))*(float(medianVal)))
+		difference= threshold - float((float(1.5))*(float(medianVal)))
 
 #		check if the threshold at 95th percentile is at least 5 seconds apart from median
 		if(difference < 0):
@@ -160,8 +160,8 @@ for jobGroupNumber in jobGroups.keys():
 		twentyPcntl = float(stats.scoreatpercentile(array2use, 20))
 		thirtyPcntl = float(stats.scoreatpercentile(array2use, 30))
 		
-		firstPcntl = float(stats.scoreatpercentile(array2use, 1))
-		fifthPcntl = float(stats.scoreatpercentile(array2use, 5))
+		firstPcntl  = float(stats.scoreatpercentile(array2use, 1))
+		fifthPcntl  = float(stats.scoreatpercentile(array2use, 5))
 		
 		f = open(sys.argv[6] + "/" + str(jobGroupNumber) + "N" + sys.argv[9] , "w")
 		flag = False
@@ -181,11 +181,15 @@ for jobGroupNumber in jobGroups.keys():
 			except Exception as e:
 				myval = "(NA)"
 			flag = True
-			print >>f, tempJobList[index], tempUserName[index], 'W '+ str(tempWTime[index]), 'C '+str(tempCTime[index]), myval, 'M ' + str(tempMemUsed[index]), 'V '+ str(tempVMemUsed[index]), "Percentile "+ attr
+			print >>f, tempJobList[index], tempUserName[index], \
+				   'W '+ str(tempWTime[index]), \
+				   'C '+ str(tempCTime[index]), myval, \
+				   'M '+ str(tempMemUsed[index]), \
+				   'V '+ str(tempVMemUsed[index]), "Percentile "+ attr
 		
 		f.close()
 		if flag == False:
-			print jobGroupNumber, " Has no Normal files!!!!"
+			print jobGroupNumber, " Has no normal run files!!!!"
 			os.remove(sys.argv[6] + "/" + str(jobGroupNumber) + "N" + sys.argv[9])
 			raw_input()
 	except Exception as e:

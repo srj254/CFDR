@@ -1,0 +1,3 @@
+
+# To list all the unique file extensions under the current folder
+find . -type f | perl -ne 'print $1 if m/\.([^.\/]+)$/' | sort -u
