@@ -166,7 +166,7 @@ for item in policyList:
 	print item, df['Resource_List.naccesspolicy'].values.tolist().count(item)
 
 raw_input()
-
+i
 print len (list(set(df['user'].values.tolist())))
 df  = df[df['user'] == "User150"]
 jobIDs = df['JobID'].values.tolist()
@@ -178,7 +178,7 @@ print len(jobIDs)
 
 count = 0
 for filename in os.listdir(sys.argv[2]):
-	if str("nrana") in filename:
+	if str("   ") in filename:
 		print filename
 		count +=1
 		if count == 10:
