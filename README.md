@@ -5,6 +5,7 @@ This is the user guide for using the python source code present in this reposito
  1. Pandas
  2. Matplotlib
  3. Numpy and Scipy
+
 And it has interdependencies between themselves (you should have seen some *.pyc files among the *.py files). So keep the file and folder structure as is and use it from such a file structure to keep away from issues/glitches of accessing different modules. In addition to all these the raw workload data should be kept on the file system. Suitable configuration parameters are provided to make sure any path on file system can be pointed at. 
 
 Each python source file when run without arguments gives the help on how to use it. For example, If the name of script is `getUniqueScripts.py` then running it without arguments would give,
