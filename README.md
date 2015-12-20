@@ -1,5 +1,4 @@
 # CFDR
-CFDR
 
 
 This is the user guide for using the python source code present in this repository. These source files has dependency on following Python modules, please ensure these are installed in the environment.
